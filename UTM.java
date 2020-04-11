@@ -57,20 +57,18 @@ public class UTM {
 
     // TODO: Implementar todos la informacion necesaria
     // Checar case.out para saber qué tenemos que imprimir
-    static String NewTape(String TT, String Cinta, int N, int P) {
+    static String newTape(String TT, String Cinta, int N, int P) {
+        makeStateGraph(TT);
         // Para no alterar cinta, creemos una copia
         StringBuilder currentTape = new StringBuilder(Cinta);
         int currentPosition = P;
-
-        makeStateGraph(TT);
         int currentState = 0;
-        for (int i = 0; i < N || currentState == haltingState; ++i) {
+        for (int i = 0; i < N && currentState != haltingState; ++i) {
             int biteInState = currentTape.charAt(currentPosition) - '0';
             Transition t = adj[currentState][biteInState];
             currentTape.setCharAt(currentPosition, (char) (t.bitToWrite + '0'));
             currentState = t.nextState;
             currentPosition += (t.move == 0 ? 1 : -1);
-
         }
 
         return currentTape.toString();
