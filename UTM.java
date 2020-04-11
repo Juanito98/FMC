@@ -16,20 +16,14 @@ public class UTM {
     }
 
     private static int statesNumber;
-    private static int haltingState = 63; // ? TODO: Corregir si me equivoco
+    private static int haltingState = 63;
     private static Transition[][] adj;
 
-    // TODO: Impplementar
     private static void makeStateGraph(String TT) {
         // Conseguir statesNumber
-        statesNumber = TT.length() / 16; // TODO: no estoy seguro, tal vez
+        statesNumber = TT.length() / 16;
         adj = new Transition[statesNumber][2];
         // Añadir todas las transiciones
-        // Por ejemplo, si estoy sobre un 0 en el estado 3, inicializo
-        // adj[3][0] = new Transition(0, 0, 0);
-        // O si veo un 1 y estoy en el estado 3, puedo hacer
-        // adj[3][1] = new Transition(3, 0, 1);
-        // La idea es más o menos leer cada ¿8 bits?}
         for (int i = 0; i < statesNumber; ++i) {
             int iState = i * 16; // Dependiendo del estado vamos a estar en el n-esimo bit.
             // leer primera parte, donde se lee un 0.
@@ -55,7 +49,7 @@ public class UTM {
         }
     }
 
-    // TODO: Implementar todos la informacion necesaria
+    // TODO: Imprimir toda la informacion necesaria
     // Checar case.out para saber qué tenemos que imprimir
     static String newTape(String TT, String Cinta, int N, int P) {
         makeStateGraph(TT);
