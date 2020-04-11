@@ -15,8 +15,12 @@ public class UTM {
         }
     }
 
+    // Guardamos el numero de estados de la TM
     private static int statesNumber;
-    private static int haltingState = 63;
+    private static final int HALTING_STATE = 63;
+    // adj[Estado][BitInPosition] --> qué transición hacer si estas en Estado
+    // estás parado sobre un 0 o 1 (BitInPosition)
+    // Ej: adj[0][1] quiere decir que estoy en estado 0 y estoy parado sobre un 1
     private static Transition[][] adj;
 
     private static void makeStateGraph(String TT) {
@@ -29,9 +33,11 @@ public class UTM {
             // leer primera parte, donde se lee un 0.
             int bitTW = Integer.parseInt(TT.substring(iState, iState + 1));
             int Mv = Integer.parseInt(TT.substring(iState + 1, iState + 2));
+            // Para obtener el estado, tenemos que convertir de binario
+            // a decimal
             int State = 0;
             for (int j = iState + 2; j < iState + 8; j++) {
-                State = State * 2;
+                State <<= 1;
                 if (TT.substring(j, j + 1).equals("1"))
                     State++;
             }
@@ -41,7 +47,7 @@ public class UTM {
             Mv = Integer.parseInt(TT.substring(iState + 9, iState + 10));
             State = 0;
             for (int j = iState + 10; j < iState + 16; j++) {
-                State = State * 2;
+                State <<= 1;
                 if (TT.substring(j, j + 1).equals("1"))
                     State++;
             }
@@ -50,6 +56,8 @@ public class UTM {
     }
 
     // TODO: Imprimir toda la informacion necesaria
+    // Imprimir si se salió de la cinta currentPosition
+    // Imprimir si se excedió N
     // Checar case.out para saber qué tenemos que imprimir
     static String newTape(String TT, String Cinta, int N, int P) {
         makeStateGraph(TT);
@@ -57,12 +65,18 @@ public class UTM {
         StringBuilder currentTape = new StringBuilder(Cinta);
         int currentPosition = P;
         int currentState = 0;
-        for (int i = 0; i < N && currentState != haltingState; ++i) {
+        for (int i = 0; i < N && currentState != HALTING_STATE; ++i) {
+            // Obtenemos el bit sobre el que estamos en la cinta
             int biteInState = currentTape.charAt(currentPosition) - '0';
+            // Ya que tenemos estado y bit sobre el que estamos,
+            // podemos obtener la transición por hacer
             Transition t = adj[currentState][biteInState];
+            // Escribimos el bit correspondiente
             currentTape.setCharAt(currentPosition, (char) (t.bitToWrite + '0'));
-            currentState = t.nextState;
+            // Nos movemos derecha o izquierda
             currentPosition += (t.move == 0 ? 1 : -1);
+            // Cambiamos de estado
+            currentState = t.nextState;
         }
 
         return currentTape.toString();
