@@ -1,6 +1,5 @@
-/**
- * UTM
- */
+package proyecto2;
+
 public class UTM {
 
     public static class Transition {
@@ -18,6 +17,7 @@ public class UTM {
     // Guardamos el numero de estados de la TM
     private static int statesNumber;
     private static final int HALTING_STATE = 63;
+
     // adj[Estado][BitInPosition] --> qué transición hacer si estas en Estado
     // estás parado sobre un 0 o 1 (BitInPosition)
     // Ej: adj[0][1] quiere decir que estoy en estado 0 y estoy parado sobre un 1
@@ -33,8 +33,7 @@ public class UTM {
             // leer primera parte, donde se lee un 0.
             int bitTW = Integer.parseInt(TT.substring(iState, iState + 1));
             int Mv = Integer.parseInt(TT.substring(iState + 1, iState + 2));
-            // Para obtener el estado, tenemos que convertir de binario
-            // a decimal
+            // Para obtener el estado, tenemos que convertir de binario a decimal
             int State = 0;
             for (int j = iState + 2; j < iState + 8; j++) {
                 State <<= 1;
@@ -55,16 +54,16 @@ public class UTM {
         }
     }
 
-    // TODO: Imprimir toda la informacion necesaria
-    // Imprimir si se salió de la cinta currentPosition
-    // Imprimir si se excedió N
-    // Checar case.out para saber qué tenemos que imprimir
     static String newTape(String TT, String Cinta, int N, int P) {
         makeStateGraph(TT);
         // Para no alterar cinta, creemos una copia
         StringBuilder currentTape = new StringBuilder(Cinta);
         int currentPosition = P;
         int currentState = 0;
+        int totalTransition = 0;
+        int productive = 0;
+        int MaxPosition = 0;
+
         for (int i = 0; i < N && currentState != HALTING_STATE; ++i) {
             // Obtenemos el bit sobre el que estamos en la cinta
             int biteInState = currentTape.charAt(currentPosition) - '0';
@@ -73,12 +72,38 @@ public class UTM {
             Transition t = adj[currentState][biteInState];
             // Escribimos el bit correspondiente
             currentTape.setCharAt(currentPosition, (char) (t.bitToWrite + '0'));
+
+            if (currentPosition > MaxPosition) {
+                MaxPosition = currentPosition;
+            }
+
             // Nos movemos derecha o izquierda
             currentPosition += (t.move == 0 ? 1 : -1);
             // Cambiamos de estado
             currentState = t.nextState;
+            totalTransition = i;
+        }
+        // Tomaremos el tamaño de la cinta para leer caracter por caracter y saber
+        // cuantos 1 tiene la cinta final
+        char ch;
+        for (int i = 0; i < currentTape.length(); i++) {
+            ch = currentTape.charAt(i);
+            if (ch == '1') {
+                productive++;
+            }
+        }
+        if (currentState == HALTING_STATE) {
+            System.out.println("HALT state was reach ");
         }
 
+        System.out.println("Total de transiciones:");
+        System.out.println(totalTransition + 1);
+        System.out.println("Productividad de la máquina:");
+        System.out.println(productive);
+        System.out.println("Total de transiciones fue distante:");
+        System.out.println(totalTransition);
+        System.out.println("La distancia máxima recorrida fue de:");
+        System.out.println(MaxPosition - P);
         return currentTape.toString();
     }
 }

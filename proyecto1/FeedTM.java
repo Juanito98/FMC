@@ -1,4 +1,4 @@
-
+package proyecto1;
 /*
  *	Alimenta una Máquina de Turing
  */
