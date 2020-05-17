@@ -19,7 +19,7 @@ public class RMH20a {
 /*
  *		LA SIGUIENTE VARIABLE REGULA EL N�MERO DE FUNCIONES DEFINIDAS
  */
-  static int maxF=32, minF=1;
+  static int maxF=33, minF=1;
   static int maxN,minN=1;
   static int maxE=15, minE=0;
   static int maxD=60, minD=0;
@@ -144,7 +144,8 @@ public class RMH20a {
 		case 30:F=RMF.DelLibroAGs(Var[0],Var[1]);		break;
 		case 31:F=RMF.CyC2015(Var[0],Var[1],Var[2]);	break;
 		case 32:F=RMF.BJ(Var[0],Var[1],Var[2],Var[3],
-			             Var[4],Var[5],Var[6]);	  		break;
+						 Var[4],Var[5],Var[6]);	  		break;
+		case 33:F=RMF.Kolmogorov(genoma);				break;
 	}//endSwitch
 	fitness=F;
 	//endFor
@@ -247,6 +248,7 @@ public class RMH20a {
 	  String sOptimo="\n�ptimo:    "+N2bS.N2S((float)fitnessOfBest,15,7,1);
   	  so.println(sOptimo);
 	  genoma=genomaOfBest;
+	  so.println("Genoma: " + genoma); 
 	  GetFenotipoDelTOH();
 	  for (int i=0;i<V;i++){
 			String Var_i=N2bS.N2S((float)Var[i],15,7,1);
