@@ -1,11 +1,17 @@
 package proyecto2;
+
 import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Locale;
 
 public class RMH20a {
-
   static PrintStream so=System.out;
   static String Resp;
-  static int E,D,V,L,FN=1,G,MM,iTmp;
+  static int E,D,V,L,FN=1,G,MM,iTmp,numT,longC;
+  static String cintaO,iTmpCO,nameCO;
+  
   /*	E 	- Bits para enteros
    *	D 	- Bits para decimales
    *	V 	- N�mero de variables
@@ -13,6 +19,9 @@ public class RMH20a {
    *	FN	- N�mero de funci�n a optimizar
    *	G	- N�mero de iteraciones/generaciones
    *	MM	- Minimiza(0)/Maximiza(1)
+   *	numT	- Número de iteraciones
+   *	longC	- Longitud de la cinta
+   *	probM	- Probabilidad de mutación
    *	iTmp - Temporal para actualizaci�n de par�metros
    */
   static double Norm, fTmp;
@@ -26,6 +35,12 @@ public class RMH20a {
   static int maxV=50, minV=1;
   static int maxG=1000000000, minG=1;
   static int maxM=1,  minM=0;
+  
+  //-----------------------Nuevo--Revisar---------------------------------------
+  static int maxNT=1000000000,  minNT=0;
+  static int maxLC=10000000,  minLC=200;
+  
+  
 //
   static double fitnessOfBest;	// Fitness del mejor individuo
   static double fitness;		// Fitness del individuo �nico
@@ -105,6 +120,7 @@ public class RMH20a {
    *			LAS FUNCIONES SE ENCUENTRAN EN LA CLASE "RMF"
    */
   public static void Evalua() throws Exception{
+
 	double F=0;
 	if (FN!=23) GetFenotipoDelTOH();
 	switch(FN) {
@@ -143,9 +159,8 @@ public class RMH20a {
 		case 29:F=RMF.quintic2(Var[0]);					break;
 		case 30:F=RMF.DelLibroAGs(Var[0],Var[1]);		break;
 		case 31:F=RMF.CyC2015(Var[0],Var[1],Var[2]);	break;
-		case 32:F=RMF.BJ(Var[0],Var[1],Var[2],Var[3],
-						 Var[4],Var[5],Var[6]);	  		break;
-		case 33:F=RMF.Kolmogorov(genoma);				break;
+		case 32:F=RMF.BJ(Var[0],Var[1],Var[2],Var[3],Var[4],Var[5],Var[6]);	  		break;
+		case 33:F = RMF.Kolmogorov(genoma, cintaO, longC, numT, false);					break;
 	}//endSwitch
 	fitness=F;
 	//endFor
@@ -204,8 +219,37 @@ public class RMH20a {
 	}//endIf
 	return;
   }//endSelecciona
-
-
+  
+  public static String asciiToBinary(String cintaObjetivo){
+      String tape = "";
+      char charAux;
+      for (int i = 0; i<cintaObjetivo.length()-1;i++){
+          charAux = cintaObjetivo.charAt(i);
+          //so.println("char i:"+i+" char: "+charAux);
+          String stgAux = Integer.toBinaryString((int) charAux);
+          while (stgAux.length()<8){
+                  stgAux = "0" + stgAux;
+              }
+          //so.println("char i:"+i+" char: "+charAux+" binario: "+stgAux);
+          tape = tape + stgAux;
+          //so.println(tape);
+      }
+      return tape;
+  }
+  private static String readTapeO(String name){
+      StringBuilder contentBuilder = new StringBuilder();
+      try (BufferedReader br = new BufferedReader(new FileReader(name))){
+          String sCurrentLine;
+          while ((sCurrentLine = br.readLine()) != null){
+              contentBuilder.append(sCurrentLine).append("\n");
+          }
+      }
+      catch (IOException e){
+          return "";
+      }
+      return contentBuilder.toString();
+  }
+  
   public static void main(String[] args) throws Exception {
 	BufferedReader Kbr;
     Kbr = new BufferedReader(new InputStreamReader(System.in));
@@ -245,15 +289,20 @@ public class RMH20a {
 			cuenta++;
 		//endif
 	  }//endFor
-	  String sOptimo="\n�ptimo:    "+N2bS.N2S((float)fitnessOfBest,15,7,1);
+	  String sOptimo="\nÓptimo:    "+N2bS.N2S((float)fitnessOfBest,15,7,1);
   	  so.println(sOptimo);
 	  genoma=genomaOfBest;
-	  so.println("Genoma: " + genoma); 
-	  GetFenotipoDelTOH();
-	  for (int i=0;i<V;i++){
-			String Var_i=N2bS.N2S((float)Var[i],15,7,1);
-	  		so.println("Variable "+i+": "+Var_i);
-	  }//endFor
+	  if (FN != 33) {
+		so.println("Genoma" + genoma); 
+		GetFenotipoDelTOH();
+		for (int i=0;i<V;i++){
+				String Var_i=N2bS.N2S((float)Var[i],15,7,1);
+				so.println("Variable "+i+": "+Var_i);
+		}//endFor
+	  } else {
+		// Actualizamos la TM para que tenga los parametros de la mejor
+		RMF.Kolmogorov(genoma, cintaO, longC, numT, true);
+	  }
 	  G=Gtemp;
 	}//endLoop
   }//endMain
@@ -264,12 +313,15 @@ public class RMH20a {
 	  }//endTry
 	  catch (Exception e){
 	    PrintStream Fps=new PrintStream(new FileOutputStream(new File("RMHParams.dat")));
-		Fps.println("1");	//1) Funcion
+		Fps.println("33");	//1) Funcion
 		Fps.println("4");	//2) Bits para Enteros
-		Fps.println("25");	//3) Bits para Decimales
-		Fps.println("2");	//4) Variables
+		Fps.println("0");	//3) Bits para Decimales
+		Fps.println("1");	//4) Variables
 		Fps.println("100");	//5) Iteraciones
-		Fps.println("0");	//6) Minimiza
+		Fps.println("1");	//6) Minimiza/Maximiza
+		Fps.println("1000");	//7) Número de transiciones
+		Fps.println("5000");	//8) Long. de la cinta
+		Fps.println("pruebas.txt");	//9) cinta objetivo
 		Fps.close();
 	  }//endCatch
   }//endCreaParams
@@ -282,6 +334,12 @@ public class RMH20a {
 	  V =Integer.parseInt(Fbr.readLine());
 	  G =Integer.parseInt(Fbr.readLine());
 	  MM=Integer.parseInt(Fbr.readLine());
+          numT = Integer.parseInt(Fbr.readLine());
+          longC = Integer.parseInt(Fbr.readLine());
+          nameCO = Fbr.readLine();
+          //Aqui es donde calculamos la cinta
+          try{checkCintaObjetivo(nameCO);}
+          catch(Exception e){so.println("No se encontró archivo de la cinta objetivo");}
   }//endGetParams
 
   public static void UpdateParams() throws Exception {
@@ -291,7 +349,10 @@ public class RMH20a {
 	Fps.println(D);				//3) Bits para Decimales
 	Fps.println(V);				//4) Variables
 	Fps.println(G);				//5) Iteraciones
-	Fps.println(MM);			//6) Minimiza
+	Fps.println(MM);			//6) Minimiza/Maximiza
+        Fps.println(numT);			//6) Número de transiciones
+        Fps.println(longC);			//6) Longitud de Cinta
+        Fps.println(nameCO);			//6) Prob. de mutación
 	Fps.close();
   }//endUpdateParams
   
@@ -304,8 +365,36 @@ public class RMH20a {
 	so.println("** Long. del genoma:        "+ L);
 	so.println("5) Numero de iteraciones:   "+ G);
 	so.println("6) Minimiza[0]/Maximiza[1]: "+MM);
+        if (FN ==33){
+            so.println("7) Número de transiciones: "+numT);
+            so.println("8) Longitus de la cinta: "+longC);
+            so.println("9) Nombre de la cinta objetivo: "+nameCO);
+        }
+        
+        
   }//endDispParams
+  
+  
+  public static boolean checkCintaObjetivo(String FName){
+      try{
+          cintaO = readTapeO(FName);
+          if (!cintaO.equals("")){
+              so.println(cintaO);
+              cintaO = asciiToBinary(cintaO);
+              so.println(cintaO);
+              return true;
+          }
+          return false;
+      }
+      catch(Exception e){
+          so.println("No se encontro \"" + FName + "\"");
+          return false;
+      }
+  }
 
+  
+  
+  
   public static boolean CheckParams(int Opcion) {
 	switch(Opcion) {
 		case 1: {FN=iTmp; if (FN<minF|FN>maxF)   return false; break;}
@@ -314,6 +403,9 @@ public class RMH20a {
 		case 4: {V =iTmp; if (V<minV|V>maxV)     return false; break;}
 		case 5: {G =iTmp; if (G<minG|G>maxG)     return false; break;}
 		case 6: {MM=iTmp; if (MM<minM|MM>maxM)   return false; break;}
+                case 7: {numT=iTmp; if (numT<minNT|MM>maxNT)   return false; break;}
+                case 8: {longC=iTmp; if (longC<minLC|MM>maxLC)   return false; break;}
+                case 9: {nameCO=iTmpCO; if (!checkCintaObjetivo(nameCO))   return false; break;}
 	}//endSwitch 
 	return true;
   }//endCheckParams
@@ -330,7 +422,8 @@ public class RMH20a {
 		if (!Resp.equals("S")&!Resp.equals("N")) continue;
 		if (Resp.equals("N")) return;
 		if (Resp.equals("S")){
-			int tFN=FN, tE=E, tD=D, tV=V, tG=G, tMM=MM;	//Registra temporales
+			int tFN=FN, tE=E, tD=D, tV=V, tG=G, tMM=MM, tnumT=numT, tlongC=longC;	//Registra temporales
+                        String tnameCO = nameCO, tcintaO = cintaO;
 			while (true){
 				so.print("Opcion No:       ");
 				int Opcion;
@@ -340,15 +433,21 @@ public class RMH20a {
 				catch (Exception e){
 					continue;							//No tecle� un d�gito
 				}//endCatch
-				if (Opcion<1|Opcion>6)					//No est� en rango
+				if (Opcion<1|Opcion>9)					//No est� en rango
 					continue;
+                                if (Opcion>6 && FN!=33)
+                                    continue;
 				//endIf
 				so.print("Nuevo valor:     ");
-				iTmp=Integer.parseInt(Kbr.readLine());	//Par�metrp de CheckParams
+                                if (Opcion==9)
+                                    iTmpCO = Kbr.readLine();
+                                else
+                                    iTmp=Integer.parseInt(Kbr.readLine());	//Par�metrp de CheckParams
 				boolean OK=CheckParams(Opcion);
 				if (!OK){
-					FN=tFN; E=tE; D=tD; V=tV; G=tG; MM=tMM;
+					FN=tFN; E=tE; D=tD; V=tV; G=tG; MM=tMM; numT=tnumT; longC = tlongC; nameCO=tnameCO; cintaO=tcintaO;
 					so.println("Error en la opcion # "+Opcion);
+                                        //so.println(cintaO);
 					continue;
 				}//endIf
 			break;

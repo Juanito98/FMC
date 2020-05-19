@@ -15,12 +15,17 @@ public class UTM {
     }
 
     // Guardamos el numero de estados de la TM
+    private static String TuringMachine;
     private static int statesNumber;
     private static final int HALTING_STATE = 63;
 
     // Algunas variables de salida que serán de utilidad
     private static boolean stateReached[];
     private static int statesReached;
+    private static int totalTransition;
+    private static int productive;
+    private static int MaxPosition;
+    private static int MinPosition;
 
     // adj[Estado][BitInPosition] --> qué transición hacer si estas en Estado
     // estás parado sobre un 0 o 1 (BitInPosition)
@@ -29,6 +34,7 @@ public class UTM {
 
     private static void makeStateGraph(String TT) {
         // Conseguir statesNumber
+        TuringMachine = TT;
         statesNumber = TT.length() / 16;
         adj = new Transition[statesNumber][2];
         // Añadir todas las transiciones
@@ -63,16 +69,26 @@ public class UTM {
         makeStateGraph(TT);
         stateReached = new boolean[statesNumber];
         statesReached = 0;
-        
-        // Para no alterar cinta, creemos una copia
-        StringBuilder currentTape = new StringBuilder(Cinta);
         int currentPosition = P;
         int currentState = 0;
+        totalTransition = 0;
+        productive = 0;
+        MaxPosition = P;
+        MinPosition = P;
+        // Para no alterar cinta, creemos una copia
+        StringBuilder currentTape = new StringBuilder(Cinta);
+
 
         for (int i = 0; i < N && currentState != HALTING_STATE; ++i) {
             if (!stateReached[currentState]) {
                 stateReached[currentState] = true;
                 statesReached++;
+            }
+            if (currentPosition > MaxPosition) {
+                MaxPosition = currentPosition;
+            }
+            if (currentPosition < MinPosition) {
+                MinPosition = currentPosition;
             }
             // Obtenemos el bit sobre el que estamos en la cinta
             int biteInState = currentTape.charAt(currentPosition) - '0';
@@ -87,11 +103,94 @@ public class UTM {
             // Cambiamos de estado
             currentState = t.nextState;
         }
+        if (!stateReached[currentState]) {
+            stateReached[currentState] = true;
+            statesReached++;
+        }
+
+        // Tomaremos el tamaño de la cinta para leer caracter por caracter y saber
+        // cuantos 1 tiene la cinta final
+        char ch;
+        for (int i = 0; i < currentTape.length(); i++) {
+            ch = currentTape.charAt(i);
+            if (ch == '1') {
+                productive++;
+            }
+        }
 
         return currentTape.toString();
     }
 
     static int getStatesReached() {
         return statesReached;
+    }
+    static int getProductiveness() {
+        return productive;
+    }
+    static int getMaxPosition() {
+        return MaxPosition;
+    }
+    static int getMinPosition() {
+        return MinPosition;
+    }
+
+    static void print() {
+		int ix16, x0_I, x1_I, Estado;
+		String x0_M, x1_M;
+		System.out.println("Hay " + statesReached + " estados en la Maquina de Turing");
+		System.out.println(" EA | O | M | SE || O | M | SE |");
+		System.out.println(" -------------------------------");
+		for (int i = 0; i < statesNumber; i++) {
+            if (!stateReached[i]) {
+                // No lo imprimimos si no fue visitado
+                continue;
+            }
+			System.out.printf("%4.0f|", (float) i);
+            ix16 = i * 16;
+
+			x0_I = Integer.parseInt(TuringMachine.substring(ix16, ix16 + 1));
+			x0_M = TuringMachine.substring(ix16 + 1, ix16 + 2);
+			if (x0_M.equals("0"))
+				x0_M = " R |";
+			else
+				x0_M = " L |";
+			System.out.printf("%3.0f|" + x0_M, (float) x0_I);
+			Estado = 0;
+			for (int j = ix16 + 2; j < ix16 + 8; j++) {
+				Estado = Estado * 2;
+				if (TuringMachine.substring(j, j + 1).equals("1"))
+					Estado++;
+				// endif
+            } // endFor
+            // Notemos que si el estado al que se dirige nunca lo visitamos
+            // entonces mejor dirigimos la arista a HALT
+			if (Estado == 63 || !stateReached[Estado])
+				System.out.print("   H||");
+			else
+				System.out.printf("%4.0f||", (float) Estado);
+            
+            // endif
+			x1_I = Integer.parseInt(TuringMachine.substring(ix16 + 8, ix16 + 9));
+			x1_M = TuringMachine.substring(ix16 + 9, ix16 + 10);
+			if (x1_M.equals("0"))
+				x1_M = " R |";
+			else
+				x1_M = " L |";
+			System.out.printf("%3.0f|" + x1_M, (float) x1_I);
+			Estado = 0;
+			for (int j = ix16 + 10; j < ix16 + 16; j++) {
+				Estado = Estado * 2;
+				if (TuringMachine.substring(j, j + 1).equals("1"))
+					Estado++;
+				// endif
+            } // endFor
+            // Notemos que si el estado al que se dirige nunca lo visitamos
+            // entonces mejor dirigimos la arista a HALT
+			if (Estado == 63 || !stateReached[Estado]) {
+				System.out.print("   H|\n");
+			} else {
+				System.out.printf("%4.0f|\n", (float) Estado);
+            } // endif
+        } // endFor
     }
 }

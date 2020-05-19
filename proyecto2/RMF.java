@@ -1004,36 +1004,50 @@ Variable 2: .0878362
    Esta función busca maximizar las coincidencias del archivo kolmogorv.txt
    con una cinta inicial llena de ceros 
    */
-  public static double Kolmogorov(String TT) {
-	String CintaObjetivo = "";
-	try {
-		RandomAccessFile f = new RandomAccessFile("kolmogorov.txt", "r");
-		for (int i = 0; i < f.length(); i++) {
-			f.seek(i);
-			byte Y = f.readByte();
-			CintaObjetivo = CintaObjetivo + String.format("%8s", Integer.toBinaryString(Y & 0xFF)).replace(' ', '0');
-		} // endFor
-		f.close();
-		System.out.println(CintaObjetivo);
-	} catch (Exception e) {
-		return 0.0;
-	}
-
-	String CintaInicial = new String(new char[300000]).replace('\0', '0');
-	int N = 1000000;
-	int P = 200000;
-	String NuevaCinta = UTM.newTape(TT, CintaInicial, N, P);
-
-	System.out.println(NuevaCinta);
-
-	double fitness = CintaObjetivo.length();
-	for (int i = 0; i < CintaObjetivo.length(); ++i) {
-		if (NuevaCinta.charAt(P+i) != CintaObjetivo.charAt(i)) {
-			fitness--;
+  public static double Kolmogorov(String TT, String CintaObj, int Tam, int N, boolean imprimeInfo) {
+	// Creamos nuestra cinta inicial llena de ceros
+	String ceros = new String(new char[Tam]).replace('\0', '0');
+	// Decimos que la posición inicial sea la mitad de la cinta
+	int P = Tam / 2;
+	// Obtenemos la cinta final que da la UTM
+	String NuevaCinta = UTM.newTape(TT, ceros, N, P);
+	
+	
+	double fitness = 0;
+	// Vamos a iterar sobre las posibles posiciones iniciales
+	// para comparar la cinta objetivo con la nueva cinta
+	// y elegiremos aquel índice que me da el mejor match
+	int minPosibleIni = Math.max(0, P - CintaObj.length());
+	int maxPosibleIni = Math.min(Tam-CintaObj.length(), P + CintaObj.length());
+	int bestIdx = P;
+	for (int i = minPosibleIni; i <= maxPosibleIni; ++i) {
+		// Definimos el fitness máximo como la longitud de la cinta objetivo
+		double fit = CintaObj.length();
+		for (int j = 0; j < CintaObj.length(); ++j) {
+			if (NuevaCinta.charAt(i+j) != CintaObj.charAt(j)) {
+				// Si en algun punto difieren, le restamos 1 al fitness
+				fit--;
+			}
 		}
+		if (fit >= fitness) {
+			fitness = fit;
+			bestIdx = i;
+		}
+		fitness = Math.max(fit, fitness);
 	}
+	
+	if (imprimeInfo) {
+		UTM.print();
+		so.println("Cadena Objetivo: " + CintaObj);
+		so.println("Cadena Encontrada: " + NuevaCinta.substring(bestIdx, bestIdx+CintaObj.length()));
+		so.println("Coinciden en " + (int)fitness + "/" + CintaObj.length() + " posiciones");
+	}
+
+	// Una vez obtenido las coincidencias de la cinta objetivo con la de 
+	// turing, entonces le restamos 1/64 por cada estado que visitó la UTM
 	double statesReached = UTM.getStatesReached();
 	fitness -= (statesReached - 1) / 64.0;
+
 	return fitness;
   }
 } //endClass
