@@ -90,6 +90,9 @@ public class UTM {
             if (currentPosition < MinPosition) {
                 MinPosition = currentPosition;
             }
+            if (currentPosition < 0 || currentPosition >= currentTape.length()) {
+                break;
+            }
             // Obtenemos el bit sobre el que estamos en la cinta
             int biteInState = currentTape.charAt(currentPosition) - '0';
             // Ya que tenemos estado y bit sobre el que estamos,
@@ -134,6 +137,11 @@ public class UTM {
         return MinPosition;
     }
 
+    // Esta función imprime la tabla de estados comprimida;
+    // esto es, solo los estados que se visitaron
+    // En caso que algun estado visitado tenga una arista que 
+    // apunte a un estado que no visitamos, en vez de eso dirige
+    // a HALT.
     static void print() {
 		int ix16, x0_I, x1_I, Estado;
 		String x0_M, x1_M;
