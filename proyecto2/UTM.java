@@ -22,7 +22,6 @@ public class UTM {
     // Algunas variables de salida que serán de utilidad
     private static boolean stateReached[];
     private static int statesReached;
-    private static int totalTransition;
     private static int productive;
     private static int MaxPosition;
     private static int MinPosition;
@@ -71,7 +70,6 @@ public class UTM {
         statesReached = 0;
         int currentPosition = P;
         int currentState = 0;
-        totalTransition = 0;
         productive = 0;
         MaxPosition = P;
         MinPosition = P;
@@ -80,10 +78,14 @@ public class UTM {
 
 
         for (int i = 0; i < N && currentState != HALTING_STATE; ++i) {
+            // Si es un estado que no habíamos visitado
+            // lo contamos y visitamos
             if (!stateReached[currentState]) {
                 stateReached[currentState] = true;
                 statesReached++;
             }
+            // Actualizamos la posición mínima y máxima
+            // que ha tocado la cabeza
             if (currentPosition > MaxPosition) {
                 MaxPosition = currentPosition;
             }

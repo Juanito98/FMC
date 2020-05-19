@@ -367,7 +367,7 @@ public class RMH20a {
 	so.println("6) Minimiza[0]/Maximiza[1]: "+MM);
         if (FN ==33){
             so.println("7) Número de transiciones: "+numT);
-            so.println("8) Longitus de la cinta: "+longC);
+            so.println("8) Longitud de la cinta: "+longC);
             so.println("9) Nombre de la cinta objetivo: "+nameCO);
         }
         

@@ -1,20 +1,28 @@
 package proyecto2;
-
 import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.math.*;
 public class EGA20 {
 
   public static int numVects=10;
   public static double Vects [][] = new double [numVects][2];
   public static int Clase [] = new int [numVects];
-  static int E,D,V,N,N_2,L,L_2,FN=1,G,MM,B2M,Nx2,iTmp,Best,n;
+  static int E,D,V,N,N_2,L,L_2,FN=1,G,MM,B2M,Nx2,iTmp,Best,n,numT,longC;
   static String Resp;
   static double Pc, Pm;
   static double Norm, fTmp;
   public static double data []=new double [317]; 
+  static PrintStream so=System.out;
+  static String cintaO,iTmpCO,nameCO;
+  
+  
+  
 /*
- *		LA SIGUIENTE VARIABLE REGULA EL N�MERO DE FUNCIONES DEFINIDAS
+ *		LA SIGUIENTE VARIABLE REGULA EL NÚMERO DE FUNCIONES DEFINIDAS
  */
-  static int maxF=32, minF=1;
+  static int maxF=33, minF=1;
   static int maxN=500,minN=1;
   static int maxE=15, minE=0;
   static int maxD=60, minD=0;
@@ -24,12 +32,18 @@ public class EGA20 {
   static int maxG=10000, minG=1;
   static int maxM=1,  minM=0;
   static int maxStringsInDeceptive=65536;
+  
+  //-----------------------Nuevo--Revisar---------------------------------------
+  static int maxNT=1000000000,  minNT=0;
+  static int maxLC=10000000,  minLC=200;
+  
+  
 //
   public static double Var[][]=new double [maxN][maxV];
   public static String genoma [];
   public static double fitness[];
-  public static int DecepFitness[]=new int [maxStringsInDeceptive];			//FUNCI�N #23
-  public static String DecepString[]=new String [maxStringsInDeceptive];	//FUNCI�N #23
+  public static int DecepFitness[]=new int [maxStringsInDeceptive];			//FUNCIÓN #23
+  public static String DecepString[]=new String [maxStringsInDeceptive];	//FUNCIÓN #23
   public static BufferedReader Fbr,Kbr;
   public static boolean firstFromMario=true;
 
@@ -124,6 +138,7 @@ public class EGA20 {
 			case 31:F=AGF.CyC2015(Var[i][0],Var[i][1],Var[i][2]);	 break;
 			case 32:F=AGF.BJ(Var[i][0],Var[i][1],Var[i][2],
 						Var[i][3],Var[i][4],Var[i][5],Var[i][6]);	 break;
+			case 33:F=AGF.Kolmogorov(genoma[i], cintaO, longC, numT, false);	break;
 		}//endSwitch
 		fitness[i]=F;
 	}//endFor
@@ -239,17 +254,68 @@ public class EGA20 {
 	    PrintStream Fps=new PrintStream(new FileOutputStream(new File("AGParams.dat")));
 		Fps.println("1");	//1) Funcion
 		Fps.println("50");	//2) Individuos
-		Fps.println("4");	//3) Bits para Enteros
-		Fps.println("25");	//4) Bits para Decimales
-		Fps.println("2");	//5) Variables
+		Fps.println("1023");	//3) Bits para Enteros
+		Fps.println("0");	//4) Bits para Decimales
+		Fps.println("1");	//5) Variables
 		Fps.println("0.9");	//6) Pc
 		Fps.println("0.01");//7) Pm
 		Fps.println("100");	//8) Generaciones
-		Fps.println("0");	//9) Minimiza
-		Fps.close();
+		Fps.println("1");	//9) Maximiza
+        Fps.println("1000");	//10) Número de transiciones
+		Fps.println("5000");	//11) Long. de la cinta
+		Fps.println("pruebas.txt");	//12) cinta objetivo
+        Fps.close();
 	  }//endCatch
   }//endCreaParams
-
+   
+  public static String asciiToBinary(String cintaObjetivo){
+      String tape = "";
+      char charAux;
+      for (int i = 0; i<cintaObjetivo.length()-1;i++){
+          charAux = cintaObjetivo.charAt(i);
+          //so.println("char i:"+i+" char: "+charAux);
+          String stgAux = Integer.toBinaryString((int) charAux);
+          while (stgAux.length()<8){
+                  stgAux = "0" + stgAux;
+              }
+          //so.println("char i:"+i+" char: "+charAux+" binario: "+stgAux);
+          tape = tape + stgAux;
+          //so.println(tape);
+      }
+      return tape;
+  }
+   
+  private static String readTapeO(String name){
+      StringBuilder contentBuilder = new StringBuilder();
+      try (BufferedReader br = new BufferedReader(new FileReader(name))){
+          String sCurrentLine;
+          while ((sCurrentLine = br.readLine()) != null){
+              contentBuilder.append(sCurrentLine).append("\n");
+          }
+      }
+      catch (IOException e){
+          return "";
+      }
+      return contentBuilder.toString();
+  }
+   
+  public static boolean checkCintaObjetivo(String FName){
+      try{
+          cintaO = readTapeO(FName);
+          if (!cintaO.equals("")){
+              //so.println(cintaO);
+              cintaO = asciiToBinary(cintaO);
+              //so.println(cintaO);
+              return true;
+          }
+          return false;
+      }
+      catch(Exception e){
+          so.println("No se encontro \"" + FName + "\"");
+          return false;
+      }
+  }
+  
   public static void GetParams() throws Exception {
 	  Fbr=new BufferedReader(new InputStreamReader(new FileInputStream(new File("AGParams.dat"))));
 	  FN=Integer.parseInt(Fbr.readLine());
@@ -260,7 +326,16 @@ public class EGA20 {
 	  Pc=Double.valueOf(Fbr.readLine()).floatValue();
 	  Pm=Double.valueOf(Fbr.readLine()).floatValue();
 	  G =Integer.parseInt(Fbr.readLine());
-	  MM=Integer.parseInt(Fbr.readLine());
+	  MM=Integer.parseInt(Fbr.readLine());          
+          numT = Integer.parseInt(Fbr.readLine());
+          longC = Integer.parseInt(Fbr.readLine());
+          nameCO = Fbr.readLine();
+          //Aqui es donde calculamos la cinta
+          if (FN == 33){
+              try{checkCintaObjetivo(nameCO);}
+              catch(Exception e){so.println("No se encontró archivo de la cinta objetivo");}
+          }
+
   }//endGetParams
 
   public static void UpdateParams() throws Exception {
@@ -274,6 +349,13 @@ public class EGA20 {
 	Fps.printf("%8.6f\n",Pm);	//7) Pm
 	Fps.println(G);				//8) Generaciones
 	Fps.println(MM);			//9) Minimiza
+    Fps.println(numT);			//10) Número de transiciones
+    Fps.println(longC);			//11) Longitud de Cinta
+    Fps.println(nameCO);			//12) Prob. de mutación
+    if (FN == 33){
+        try{checkCintaObjetivo(nameCO);}
+        catch(Exception e){so.println("No se encontró archivo de la cinta objetivo");}
+	}
 	Fps.close();
   }//endUpdateParams
   
@@ -288,7 +370,12 @@ public class EGA20 {
 	System.out.printf ("6) Prob. de cruzamiento:    %8.6f\n",Pc);
 	System.out.printf ("7) Prob. de mutacion:       %8.6f\n",Pm);
 	System.out.println("8) Numero de generaciones:  "+ G);
-	System.out.println("9) Minimiza[0]/Maximiza[1]: "+MM);
+	System.out.println("9) Minimiza[0]/Maximiza[1]: "+MM);        
+        if (FN ==33){
+            so.println("10) Número de transiciones: "+numT);
+            so.println("11) Longitud de la cinta: "+longC);
+            so.println("12) Nombre de la cinta objetivo: "+nameCO);
+        }
   }//endDispParams
 
   public static boolean CheckParams(int Opcion) {
@@ -302,6 +389,9 @@ public class EGA20 {
 		case 7: {Pm=fTmp; if (Pm<minPm|Pm>maxPm) return false; break;}
 		case 8: {G =iTmp; if (G<minG|G>maxG)     return false; break;}
 		case 9: {MM=iTmp; if (MM<minM|MM>maxM)   return false; break;}
+                case 10: {numT=iTmp; if (numT<minNT|MM>maxNT)   return false; break;}
+                case 11: {longC=iTmp; if (longC<minLC|MM>maxLC)   return false; break;}
+                case 12: {nameCO=iTmpCO; if (!checkCintaObjetivo(nameCO))   return false; break;}
 	}//endSwitch
 	return true;
   }//endCheckParams
@@ -328,8 +418,9 @@ public class EGA20 {
 		if (!Resp.equals("S")&!Resp.equals("N")) continue;
 		if (Resp.equals("N")) return;
 		if (Resp.equals("S")){
-			int tFN=FN, tN=N, tE=E, tD=D, tV=V;
+			int tFN=FN, tN=N, tE=E, tD=D, tV=V, tnumT=numT, tlongC=longC;
 			double tPc=Pc, tPm=Pm; int tG=G, tMM=MM;
+                        String tnameCO = nameCO, tcintaO = cintaO;
 			while (true){
 				System.out.print("Opcion No:       ");
 				int Opcion;
@@ -339,15 +430,19 @@ public class EGA20 {
 				catch (Exception e){
 					continue;
 				}//endCatch
-				if (Opcion<1|Opcion>9)
+				if (Opcion<1|Opcion>12)
 					continue;
 				//endIf
+                                if (Opcion>9 && FN!=33)
+                                    continue;
 				System.out.print("Nuevo valor:     ");
 				iTmp=1;
 				fTmp=1;
 				try{
 					if (Opcion==6|Opcion==7)
 						fTmp=Double.parseDouble(Kbr.readLine());
+                                        else if (Opcion==12)
+                                                iTmpCO = Kbr.readLine();
 					else
 						iTmp=Integer.parseInt(Kbr.readLine());
 					//endIf
@@ -359,6 +454,7 @@ public class EGA20 {
 				if (!OK){
 					FN=tFN; N=tN; E=tE; D=tD; V=tV;
 					Pc=tPc; Pm=tPm; G=tG; MM=tMM;
+                                        numT=tnumT; longC = tlongC; nameCO=tnameCO; cintaO=tcintaO;
 					System.out.println("Error en la opcion # "+Opcion);
 					continue;
 				}//endIf
@@ -454,16 +550,19 @@ public class EGA20 {
 		}//endIf
 		Selecciona(fitness,genoma);			//Selecciona los mejores N
 	  }//endFor
-	  if (FN!=23){
+	  if (FN!=23 && FN != 33){
 		  GetFenotiposOfGenoma(0);
 		  for (i=0;i<V;i++){
 	  		System.out.printf("Var[%3.0f] = %15.7f\n",(float)i,Var[0][i]);
 		  }//endfor
-	  }else{
+	  }else if (FN == 23) {
 		  if (found){
 		  	System.out.println("Optimo alcanzado en "+i+" iteraciones");
 		  }//endIf
 	  	  System.out.println("Cadena: "+genoma[0]);
+	  } else {
+		// Actualizamos la TM para que tenga los parametros de la mejor
+		AGF.Kolmogorov(genoma[0], cintaO, longC, numT, true);	
 	  }//endIf
 	  System.out.printf(  "Optimo:  = %15.7f\n",fitness[0]);
 	  G=Gtemp;

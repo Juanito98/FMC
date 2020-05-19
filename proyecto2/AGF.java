@@ -989,4 +989,61 @@ class AGF {
 	}//endif
     	return Expected;
    }//endCyC2015
+
+	/*
+	 * 33. Kolmogorov
+	 * 
+	 * Esta función busca maximizar las coincidencias del archivo kolmogorv.txt con
+	 * una cinta inicial llena de ceros En específico, maximiza F = coincidencias +
+	 * ((64-numero de estados alcanzados) / 64)
+	 */
+	public static double Kolmogorov(String TT, String CintaObj, int Tam, int N, boolean imprimeInfo) {
+		// Creamos nuestra cinta inicial llena de ceros
+		String ceros = new String(new char[Tam]).replace('\0', '0');
+		// Decimos que la posición inicial sea la mitad de la cinta
+		int P = Tam / 2;
+		// Obtenemos la cinta final que da la UTM
+		String NuevaCinta = UTM.newTape(TT, ceros, N, P);
+
+		double fitness = 0;
+		// Vamos a iterar sobre las posibles posiciones iniciales
+		// para comparar la cinta objetivo con la nueva cinta
+		// y elegiremos aquel índice que me da el mejor match
+		int minPosibleIni = Math.max(0, P - CintaObj.length());
+		int maxPosibleIni = Math.min(Tam - CintaObj.length(), P + CintaObj.length());
+		int bestIdx = P;
+		for (int i = minPosibleIni; i <= maxPosibleIni; ++i) {
+			// Definimos el fitness máximo como la longitud de la cinta objetivo
+			double fit = CintaObj.length();
+			for (int j = 0; j < CintaObj.length(); ++j) {
+				if (NuevaCinta.charAt(i + j) != CintaObj.charAt(j)) {
+					// Si en algun punto difieren, le restamos 1 al fitness
+					fit--;
+				}
+			}
+			// Si empezar en la i-ésima posicion tiene más coincidencias
+			// actualizamos el fitness
+			if (fit >= fitness) {
+				fitness = fit;
+				bestIdx = i;
+			}
+		}
+
+		// En caso de que se requiera, imprimimos la información
+		// del desempeño de la máquina de turing
+		if (imprimeInfo) {
+			UTM.print();
+			so.println("Cadena Objetivo: " + CintaObj);
+			so.println("Cadena Encontrada: " + NuevaCinta.substring(bestIdx, bestIdx + CintaObj.length()));
+			so.println("Coinciden en " + (int) fitness + "/" + CintaObj.length() + " posiciones");
+		}
+
+		// Una vez obtenido las coincidencias de la cinta objetivo con la de
+		// turing, entonces le restamos 1/64 por cada estado que visitó la UTM
+		double statesReached = UTM.getStatesReached();
+		fitness -= (statesReached - 1) / 64.0;
+
+		return fitness;
+	}// endKolmogorov
+
 } //endClass

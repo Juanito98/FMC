@@ -1001,8 +1001,11 @@ Variable 2: .0878362
 
    /*
    33. Kolmogorov
+
    Esta función busca maximizar las coincidencias del archivo kolmogorv.txt
    con una cinta inicial llena de ceros 
+   En específico, maximiza
+   	F = coincidencias + ((64-numero de estados alcanzados) / 64)
    */
   public static double Kolmogorov(String TT, String CintaObj, int Tam, int N, boolean imprimeInfo) {
 	// Creamos nuestra cinta inicial llena de ceros
@@ -1029,13 +1032,16 @@ Variable 2: .0878362
 				fit--;
 			}
 		}
+		// Si empezar en la i-ésima posicion tiene más coincidencias
+		// actualizamos el fitness
 		if (fit >= fitness) {
 			fitness = fit;
 			bestIdx = i;
 		}
-		fitness = Math.max(fit, fitness);
 	}
 	
+	// En caso de que se requiera, imprimimos la información
+	// del desempeño de la máquina de turing
 	if (imprimeInfo) {
 		UTM.print();
 		so.println("Cadena Objetivo: " + CintaObj);
@@ -1049,5 +1055,5 @@ Variable 2: .0878362
 	fitness -= (statesReached - 1) / 64.0;
 
 	return fitness;
-  }
+  }//endKolmogorov
 } //endClass
