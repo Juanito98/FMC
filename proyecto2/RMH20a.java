@@ -314,7 +314,7 @@ public class RMH20a {
 	  catch (Exception e){
 	    PrintStream Fps=new PrintStream(new FileOutputStream(new File("RMHParams.dat")));
 		Fps.println("33");	//1) Funcion
-		Fps.println("4");	//2) Bits para Enteros
+		Fps.println("1023");	//2) Bits para Enteros
 		Fps.println("0");	//3) Bits para Decimales
 		Fps.println("1");	//4) Variables
 		Fps.println("100");	//5) Iteraciones
